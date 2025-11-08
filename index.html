@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="fi">
 <head>
+    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0b0b0b">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -9,32 +10,45 @@
     <script>
     if ("serviceWorker" in navigator){
         navigator.serviceWorker.register("service-worker.js");
-        }
-        </script>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HTML-tiedoston editori – Monaco (VS Code)</title>
-<style>
-html,body{
-  margin:0; padding:0; height:100%;
-  background:#0b0b0b; color:#eee; font-family:system-ui;
-}
-header{
-  padding:14px; background:#111; border-bottom:1px solid #333;
-  display:flex; gap:16px; align-items:center;
-}
-button,label{
-  background:#1e1e1e; border:1px solid #444; padding:10px 16px;
-  border-radius:6px; cursor:pointer; color:#eee;
-}
-button:hover,label:hover{ background:#2a2a2a; }
-input[type=file]{ display:none; }
-#container{ width:100%; height:calc(100% - 60px); }
-</style>
+    }
+    </script>
 
-<!-- Monaco Editor CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/loader.min.js">
-</script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Koodinkorjaaja – HTML editori</title>
+
+    <style>
+    html,body{
+      margin:0; padding:0; height:100%;
+      background:#0b0b0b; color:#eee; font-family:system-ui;
+    }
+    header{
+      padding:14px; background:#111; border-bottom:1px solid #333;
+      display:flex; gap:16px; align-items:center;
+    }
+    button,label{
+      background:#1e1e1e; border:1px solid #444; padding:10px 16px;
+      border-radius:6px; cursor:pointer; color:#eee;
+    }
+    button:hover,label:hover{ background:#2a2a2a; }
+    input[type=file]{ display:none; }
+    #container{ width:100%; height:calc(100% - 60px); }
+    #fallback{
+      display:none;
+      width:100%;
+      height:calc(100% - 60px);
+      background:#111;
+      color:#eee;
+      padding:12px;
+      font-family:monospace;
+      font-size:15px;
+      border:none;
+      outline:none;
+    }
+    </style>
+
+    <!-- Toimiva Monaco CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.33.0/min/vs/loader.js"></script>
 </head>
 <body>
 
@@ -47,65 +61,89 @@ input[type=file]{ display:none; }
   <button id="formatBtn">Kaunista koodia</button>
 </header>
 
-<div id="container">
-</div>
+<!-- Editorikontit -->
+<div id="container"></div>
+<textarea id="fallback"></textarea>
 
 <script>
 let editor;
 let currentFilename = "muokattu.html";
 
-require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' } });
-
-require(["vs/editor/editor.main"], function () {
-  editor = monaco.editor.create(document.getElementById('container'), {
-    value: "<!-- Lataa index.html nähdäksesi sisällön tässä… -->",
-    language: "html",
-    theme: "vs-dark",
-    automaticLayout: true,
-    fontSize: 16,
-    minimap: { enabled: false }
-  });
+require.config({
+    paths: { "vs": "https://cdn.jsdelivr.net/npm/monaco-editor@0.33.0/min/vs" }
 });
 
-const fileInput = document.getElementById("file");
-const saveBtn = document.getElementById("saveBtn");
-const formatBtn = document.getElementById("formatBtn");
+// YRITÄ LADATA MONACO
+require(["vs/editor/editor.main"], function () {
 
+    editor = monaco.editor.create(document.getElementById("container"), {
+      value: "<!-- Lataa HTML-tiedosto nähdäksesi sisällön… -->",
+      language: "html",
+      theme: "vs-dark",
+      automaticLayout: true,
+      fontSize: 16,
+      minimap: { enabled: false }
+    });
+
+}, function error() {
+
+    // FALLBACK: jos CDN ei lataudu
+    document.getElementById("container").style.display = "none";
+    const ta = document.getElementById("fallback");
+    ta.style.display = "block";
+
+    // Luodaan adapteri, jotta muu logiikka toimii
+    editor = {
+      getValue: () => ta.value,
+      setValue: v => ta.value = v
+    };
+
+});
+    
+// TIEDOSTON LATAUS
+const fileInput = document.getElementById("file");
 fileInput.addEventListener("change", e => {
   const file = e.target.files[0];
   if(!file) return;
+
   currentFilename = file.name;
   const reader = new FileReader();
   reader.onload = () => { editor.setValue(reader.result); };
   reader.readAsText(file);
 });
 
+// TALLENNUS
+const saveBtn = document.getElementById("saveBtn");
 saveBtn.addEventListener("click", () => {
   const text = editor.getValue();
   const blob = new Blob([text], { type:"text/html" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
+
   a.download = currentFilename.replace(/\.html?$/, "") + "_muokattu.html";
-  document.body.appendChild(a); a.click(); a.remove();
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
   URL.revokeObjectURL(url);
 });
 
-// Simple pretty print using browser DOM serializer (works for HTML/XML)
+// KAUNISTUS
+const formatBtn = document.getElementById("formatBtn");
 formatBtn.addEventListener("click", () => {
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(editor.getValue(), "text/html");
-    const serialized = "<!doctype html>\n" + doc.documentElement.outerHTML
-      .replace(/>
-</g, ">\n<"); // add basic line breaks
+    const serialized = "<!doctype html>\n" +
+      doc.documentElement.outerHTML.replace(/></g, ">\n<");
+
     editor.setValue(serialized);
+
   } catch(e) {
     alert("Muotoilu epäonnistui: " + e.message);
   }
 });
 </script>
-
 
 </body>
 </html>
