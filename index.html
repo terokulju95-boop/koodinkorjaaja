@@ -21,10 +21,11 @@
 html,body{
   margin:0; padding:0; height:100%;
   background:#0b0b0b; color:#eee; font-family:system-ui;
+  overflow:hidden;
 }
 header{
   padding:14px; background:#111; border-bottom:1px solid #333;
-  display:flex; gap:16px; align-items:center;
+  display:flex; flex-wrap:wrap; gap:16px; align-items:center;
 }
 button,label{
   background:#1e1e1e; border:1px solid #444; padding:10px 16px;
@@ -32,18 +33,24 @@ button,label{
 }
 button:hover,label:hover{ background:#2a2a2a; }
 input[type=file]{ display:none; }
-#container{ width:100%; height:calc(100% - 60px); }
+
+#container{
+  width:100%;
+  height:calc(100% - 120px); /* ✅ napit vievät enemmän tilaa */
+}
+
 #fallback{
   display:none;
   width:100%;
-  height:calc(100% - 60px);
+  height:calc(100% - 120px); /* ✅ sama korkeus kuin container */
   background:#111;
   color:#eee;
   padding:12px;
   font-family:monospace;
-  font-size:15px;
+  font-size:16px;
   border:none;
   outline:none;
+  resize:none;
 }
 </style>
 
@@ -62,7 +69,7 @@ input[type=file]{ display:none; }
   <button id="saveBtn">Tallenna muokattu tiedosto</button>
   <button id="formatBtn">Kaunista koodia</button>
 
-  <!-- ✅ LISÄTTY NAPPI -->
+  <!-- ✅ TYHJENNÄ KAIKKI NAPPI -->
   <button id="clearBtn">Tyhjennä kaikki</button>
 </header>
 
@@ -78,7 +85,7 @@ require.config({
     paths: { "vs": "https://cdn.jsdelivr.net/npm/monaco-editor@0.33.0/min/vs" }
 });
 
-// YRITÄ LADATA MONACO
+// ✅ YRITÄ LADATA MONACO
 require(["vs/editor/editor.main"], function () {
 
     editor = monaco.editor.create(document.getElementById("container"), {
@@ -92,10 +99,12 @@ require(["vs/editor/editor.main"], function () {
 
 }, function error() {
 
-    // FALLBACK: jos CDN ei lataudu
+    // ✅ FALLBACK EDITORI AKTIVOIDAAN
     document.getElementById("container").style.display = "none";
+
     const ta = document.getElementById("fallback");
     ta.style.display = "block";
+    ta.value = "<!-- Fallback-editori käytössä (Monaco ei latautunut) -->";
 
     editor = {
       getValue: () => ta.value,
@@ -103,7 +112,7 @@ require(["vs/editor/editor.main"], function () {
     };
 });
 
-// TIEDOSTON LATAUS
+// ✅ TIEDOSTON LATAUS
 const fileInput = document.getElementById("file");
 fileInput.addEventListener("change", e => {
   const file = e.target.files[0];
@@ -115,7 +124,7 @@ fileInput.addEventListener("change", e => {
   reader.readAsText(file);
 });
 
-// TALLENNUS
+// ✅ TALLENNUS
 const saveBtn = document.getElementById("saveBtn");
 saveBtn.addEventListener("click", () => {
   const text = editor.getValue();
@@ -131,7 +140,7 @@ saveBtn.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-// KAUNISTUS
+// ✅ KAUNISTUS
 const formatBtn = document.getElementById("formatBtn");
 formatBtn.addEventListener("click", () => {
   try {
@@ -151,7 +160,6 @@ formatBtn.addEventListener("click", () => {
 document.getElementById("clearBtn").addEventListener("click", () => {
   editor.setValue("");
 });
-
 </script>
 
 </body>
