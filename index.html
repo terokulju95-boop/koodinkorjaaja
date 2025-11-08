@@ -24,7 +24,7 @@
     }
     header{
       padding:14px; background:#111; border-bottom:1px solid #333;
-      display:flex; gap:16px; align-items:center;
+      display:flex; gap:16px; flex-wrap:wrap; align-items:center;
     }
     button,label{
       background:#1e1e1e; border:1px solid #444; padding:10px 16px;
@@ -32,11 +32,12 @@
     }
     button:hover,label:hover{ background:#2a2a2a; }
     input[type=file]{ display:none; }
-    #container{ width:100%; height:calc(100% - 60px); }
+
+    #container{ width:100%; height:calc(100% - 100px); }
     #fallback{
       display:none;
       width:100%;
-      height:calc(100% - 60px);
+      height:calc(100% - 100px);
       background:#111;
       color:#eee;
       padding:12px;
@@ -57,11 +58,18 @@
     <span>Lataa HTML-tiedosto</span>
     <input type="file" id="file" accept="text/html">
   </label>
+
   <button id="saveBtn">Tallenna muokattu tiedosto</button>
   <button id="formatBtn">Kaunista koodia</button>
+
+  <!-- ✅ Uusi nappi: Tyhjennä kaikki -->
+  <button id="clearBtn">Tyhjennä kaikki</button>
+
+  <!-- ✅ Uusi nappi: Lisää tyhjennyskoodi kursorin kohdalle -->
+  <button id="insertClearCodeBtn">Lisää tyhjennyskoodi</button>
 </header>
 
-<!-- Editorikontit -->
+<!-- Editorialue -->
 <div id="container"></div>
 <textarea id="fallback"></textarea>
 
@@ -69,11 +77,13 @@
 let editor;
 let currentFilename = "muokattu.html";
 
+/* ---------------------------
+   MONACO ALUSTUS + FALLBACK
+----------------------------*/
 require.config({
     paths: { "vs": "https://cdn.jsdelivr.net/npm/monaco-editor@0.33.0/min/vs" }
 });
 
-// YRITÄ LADATA MONACO
 require(["vs/editor/editor.main"], function () {
 
     editor = monaco.editor.create(document.getElementById("container"), {
@@ -87,20 +97,19 @@ require(["vs/editor/editor.main"], function () {
 
 }, function error() {
 
-    // FALLBACK: jos CDN ei lataudu
     document.getElementById("container").style.display = "none";
     const ta = document.getElementById("fallback");
     ta.style.display = "block";
 
-    // Luodaan adapteri, jotta muu logiikka toimii
     editor = {
       getValue: () => ta.value,
       setValue: v => ta.value = v
     };
-
 });
-    
-// TIEDOSTON LATAUS
+
+/* ---------------------------
+   LATAA TIEDOSTO
+----------------------------*/
 const fileInput = document.getElementById("file");
 fileInput.addEventListener("change", e => {
   const file = e.target.files[0];
@@ -112,7 +121,9 @@ fileInput.addEventListener("change", e => {
   reader.readAsText(file);
 });
 
-// TALLENNUS
+/* ---------------------------
+   TALLENNA TIEDOSTO
+----------------------------*/
 const saveBtn = document.getElementById("saveBtn");
 saveBtn.addEventListener("click", () => {
   const text = editor.getValue();
@@ -120,7 +131,6 @@ saveBtn.addEventListener("click", () => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-
   a.download = currentFilename.replace(/\.html?$/, "") + "_muokattu.html";
   document.body.appendChild(a);
   a.click();
@@ -128,7 +138,9 @@ saveBtn.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-// KAUNISTUS
+/* ---------------------------
+   KAUNISTA KOODI
+----------------------------*/
 const formatBtn = document.getElementById("formatBtn");
 formatBtn.addEventListener("click", () => {
   try {
@@ -142,6 +154,35 @@ formatBtn.addEventListener("click", () => {
   } catch(e) {
     alert("Muotoilu epäonnistui: " + e.message);
   }
+});
+
+/* ---------------------------
+   ✅ TYHJENNÄ KAIKKI
+----------------------------*/
+document.getElementById("clearBtn").addEventListener("click", () => {
+  editor.setValue("");
+});
+
+/* ---------------------------
+   ✅ LISÄÄ TYYHJENNYSKOODI KURSORIN KOHTAAN
+----------------------------*/
+document.getElementById("insertClearCodeBtn").addEventListener("click", () => {
+
+  const code = `
+<!-- Tyhjennä kaikki nappi -->
+<button id="clearBtn">Tyhjennä kaikki</button>
+<script>
+document.getElementById("clearBtn").addEventListener("click", () => {
+  document.body.innerHTML = "";
+});
+</script>
+`;
+
+  const pos = editor.getPosition();
+  editor.executeEdits("", [{
+    range: new monaco.Range(pos.lineNumber, pos.column, pos.lineNumber, pos.column),
+    text: code
+  }]);
 });
 </script>
 
