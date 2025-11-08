@@ -25,6 +25,7 @@
     header{
       padding:14px; background:#111; border-bottom:1px solid #333;
       display:flex; gap:16px; align-items:center;
+      flex-wrap:wrap;
     }
     button,label{
       background:#1e1e1e; border:1px solid #444; padding:10px 16px;
@@ -59,6 +60,7 @@
   </label>
   <button id="saveBtn">Tallenna muokattu tiedosto</button>
   <button id="formatBtn">Kaunista koodia</button>
+  <button id="copyBtn">Kopioi koodi</button>
 </header>
 
 <!-- Editorikontit -->
@@ -141,6 +143,18 @@ formatBtn.addEventListener("click", () => {
 
   } catch(e) {
     alert("Muotoilu epäonnistui: " + e.message);
+  }
+});
+
+// KOPIOINTI
+const copyBtn = document.getElementById("copyBtn");
+copyBtn.addEventListener("click", async () => {
+  const text = editor.getValue();
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("Koodi kopioitu leikepöydälle.");
+  } catch (e) {
+    alert("Kopiointi epäonnistui: " + e.message);
   }
 });
 </script>
