@@ -28,7 +28,7 @@
       flex-wrap:wrap;
     }
     button,label{
-      background:#1e1e1e; border:1px solid #444; padding:10px 16px;
+      background:#1e1e1e; border:11px solid #444; padding:10px 16px;
       border-radius:6px; cursor:pointer; color:#eee;
     }
     button:hover,label:hover{ background:#2a2a2a; }
@@ -79,7 +79,7 @@ require.config({
 require(["vs/editor/editor.main"], function () {
 
     editor = monaco.editor.create(document.getElementById("container"), {
-      value: "<!-- Lataa HTML-tiedosto nähdäksesi sisällön… -->",
+      value: "",
       language: "html",
       theme: "vs-dark",
       automaticLayout: true,
@@ -94,7 +94,7 @@ require(["vs/editor/editor.main"], function () {
     const ta = document.getElementById("fallback");
     ta.style.display = "block";
 
-    // Luodaan adapteri, jotta muu logiikka toimii
+    // Adapteri
     editor = {
       getValue: () => ta.value,
       setValue: v => ta.value = v
