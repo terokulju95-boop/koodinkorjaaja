@@ -3,7 +3,7 @@
 <head>
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0b0b0b">
+    <meta name="theme-color" content="#0f0f23">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
 
@@ -18,49 +18,311 @@
     <title>Koodinkorjaaja – HTML editori</title>
 
     <style>
-    html,body{
-      margin:0; padding:0; height:100%;
-      background:#0b0b0b; color:#eee; font-family:system-ui;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    * {
+      box-sizing: border-box;
     }
-    header{
-      padding:14px; background:#111; border-bottom:1px solid #333;
-      display:flex; gap:16px; align-items:center;
-      flex-wrap:wrap;
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+      color: #e0e0e0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
     }
-    button,label{
-      background:#1e1e1e; border:11px solid #444; padding:10px 16px;
-      border-radius:6px; cursor:pointer; color:#eee;
+
+    /* Animoitu tausta */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+      animation: pulse 15s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
     }
-    button:hover,label:hover{ background:#2a2a2a; }
-    input[type=file]{ display:none; }
-    #container{ width:100%; height:calc(100% - 60px); }
-    #fallback{
-      display:none;
-      width:100%;
-      height:calc(100% - 60px);
-      background:#111;
-      color:#eee;
-      padding:12px;
-      font-family:monospace;
-      font-size:15px;
-      border:none;
-      outline:none;
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.3; }
+      50% { transform: scale(1.1) rotate(180deg); opacity: 0.5; }
+    }
+
+    header {
+      position: relative;
+      z-index: 10;
+      padding: 20px 28px;
+      background: rgba(17, 17, 31, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-right: auto;
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+
+    button, label {
+      position: relative;
+      background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 11px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      color: #e0e0e0;
+      font-weight: 500;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    button::before, label::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(99, 102, 241, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    button:hover::before, label:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    button:hover, label:hover {
+      background: linear-gradient(135deg, #2d2d44 0%, #3d3d5c 100%);
+      border-color: rgba(99, 102, 241, 0.6);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    button:active, label:active {
+      transform: translateY(0);
+    }
+
+    button span, label span {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Ikonit napeille */
+    button::after, label::after {
+      position: relative;
+      z-index: 1;
+    }
+
+    #saveBtn::after {
+      content: '💾';
+      margin-left: 6px;
+    }
+
+    #formatBtn::after {
+      content: '✨';
+      margin-left: 6px;
+    }
+
+    #copyBtn::after {
+      content: '📋';
+      margin-left: 6px;
+    }
+
+    label.file-label::after {
+      content: '📁';
+      margin-left: 6px;
+    }
+
+    input[type=file] {
+      display: none;
+    }
+
+    #container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: calc(100% - 77px);
+      border-radius: 0;
+      overflow: hidden;
+      box-shadow: inset 0 4px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    #fallback {
+      display: none;
+      width: 100%;
+      height: calc(100% - 77px);
+      background: rgba(17, 17, 31, 0.95);
+      color: #e0e0e0;
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      border: none;
+      outline: none;
+      resize: none;
+      line-height: 1.6;
+    }
+
+    /* Latausanimaatio */
+    .loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+      display: none;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(99, 102, 241, 0.2);
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Notifikaatio */
+    .notification {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+      transform: translateY(150%);
+      transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      z-index: 1000;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .notification.show {
+      transform: translateY(0);
+    }
+
+    /* Responsiivisuus */
+    @media (max-width: 768px) {
+      header {
+        padding: 16px;
+        gap: 8px;
+      }
+
+      .logo {
+        font-size: 18px;
+        width: 100%;
+        margin-bottom: 8px;
+      }
+
+      button, label {
+        padding: 10px 16px;
+        font-size: 13px;
+      }
+
+      #container {
+        height: calc(100% - 130px);
+      }
+    }
+
+    /* Scroll */
+    ::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(17, 17, 31, 0.5);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
     }
     </style>
 
-    <!-- Toimiva Monaco CDN -->
+    <!-- Monaco CDN -->
     <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.33.0/min/vs/loader.js"></script>
 </head>
 <body>
 
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+</div>
+
+<div class="notification" id="notification"></div>
+
 <header>
-  <label>
-    <span>Lataa HTML-tiedosto</span>
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <span>Koodinkorjaaja</span>
+  </div>
+  
+  <label class="file-label">
+    <span>Lataa HTML</span>
     <input type="file" id="file" accept="text/html">
   </label>
-  <button id="saveBtn">Tallenna muokattu tiedosto</button>
-  <button id="formatBtn">Kaunista koodia</button>
-  <button id="copyBtn">Kopioi koodi</button>
+  <button id="saveBtn"><span>Tallenna</span></button>
+  <button id="formatBtn"><span>Kaunista</span></button>
+  <button id="copyBtn"><span>Kopioi</span></button>
 </header>
 
 <!-- Editorikontit -->
@@ -71,24 +333,54 @@
 let editor;
 let currentFilename = "muokattu.html";
 
+// Notifikaatio-funktio
+function showNotification(message, duration = 3000) {
+  const notification = document.getElementById('notification');
+  notification.textContent = message;
+  notification.classList.add('show');
+  
+  setTimeout(() => {
+    notification.classList.remove('show');
+  }, duration);
+}
+
+// Latausanimaatio
+function showLoading() {
+  document.getElementById('loading').classList.add('active');
+}
+
+function hideLoading() {
+  document.getElementById('loading').classList.remove('active');
+}
+
 require.config({
     paths: { "vs": "https://cdn.jsdelivr.net/npm/monaco-editor@0.33.0/min/vs" }
 });
 
 // YRITÄ LADATA MONACO
-require(["vs/editor/editor.main"], function () {
+showLoading();
 
+require(["vs/editor/editor.main"], function () {
     editor = monaco.editor.create(document.getElementById("container"), {
       value: "",
       language: "html",
       theme: "vs-dark",
       automaticLayout: true,
       fontSize: 16,
-      minimap: { enabled: false }
+      fontFamily: "'JetBrains Mono', monospace",
+      lineHeight: 24,
+      minimap: { enabled: false },
+      scrollBeyondLastLine: false,
+      smoothScrolling: true,
+      cursorBlinking: "smooth",
+      cursorSmoothCaretAnimation: true,
+      padding: { top: 20, bottom: 20 }
     });
 
-}, function error() {
+    hideLoading();
+    showNotification('✨ Editori ladattu onnistuneesti!');
 
+}, function error() {
     // FALLBACK: jos CDN ei lataudu
     document.getElementById("container").style.display = "none";
     const ta = document.getElementById("fallback");
@@ -100,6 +392,8 @@ require(["vs/editor/editor.main"], function () {
       setValue: v => ta.value = v
     };
 
+    hideLoading();
+    showNotification('⚠️ Käytetään yksinkertaistettua editoria');
 });
     
 // TIEDOSTON LATAUS
@@ -108,26 +402,45 @@ fileInput.addEventListener("change", e => {
   const file = e.target.files[0];
   if(!file) return;
 
+  showLoading();
   currentFilename = file.name;
   const reader = new FileReader();
-  reader.onload = () => { editor.setValue(reader.result); };
+  
+  reader.onload = () => {
+    editor.setValue(reader.result);
+    hideLoading();
+    showNotification(`📁 ${file.name} ladattu!`);
+  };
+  
+  reader.onerror = () => {
+    hideLoading();
+    showNotification('❌ Tiedoston lataus epäonnistui');
+  };
+  
   reader.readAsText(file);
 });
 
 // TALLENNUS
 const saveBtn = document.getElementById("saveBtn");
 saveBtn.addEventListener("click", () => {
-  const text = editor.getValue();
-  const blob = new Blob([text], { type:"text/html" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
+  try {
+    const text = editor.getValue();
+    const blob = new Blob([text], { type:"text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
 
-  a.download = currentFilename.replace(/\.html?$/, "") + "_muokattu.html";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+    const newFilename = currentFilename.replace(/\.html?$/, "") + "_muokattu.html";
+    a.download = newFilename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    
+    showNotification(`💾 ${newFilename} tallennettu!`);
+  } catch(e) {
+    showNotification('❌ Tallennus epäonnistui: ' + e.message);
+  }
 });
 
 // KAUNISTUS
@@ -136,13 +449,45 @@ formatBtn.addEventListener("click", () => {
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(editor.getValue(), "text/html");
-    const serialized = "<!doctype html>\n" +
-      doc.documentElement.outerHTML.replace(/></g, ">\n<");
+    
+    // Yksinkertainen sisennysfunktio
+    function formatHTML(node, indent = 0) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent.trim();
+        return text ? '  '.repeat(indent) + text + '\n' : '';
+      }
+      
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const tagName = node.tagName.toLowerCase();
+        let result = '  '.repeat(indent) + '<' + tagName;
+        
+        // Lisää attribuutit
+        for (let attr of node.attributes) {
+          result += ' ' + attr.name + '="' + attr.value + '"';
+        }
+        
+        if (node.childNodes.length === 0) {
+          result += '>\n';
+        } else {
+          result += '>\n';
+          for (let child of node.childNodes) {
+            result += formatHTML(child, indent + 1);
+          }
+          result += '  '.repeat(indent) + '</' + tagName + '>\n';
+        }
+        
+        return result;
+      }
+      
+      return '';
+    }
 
-    editor.setValue(serialized);
+    let formatted = '<!DOCTYPE html>\n' + formatHTML(doc.documentElement);
+    editor.setValue(formatted);
+    showNotification('✨ Koodi kaunistettu!');
 
   } catch(e) {
-    alert("Muotoilu epäonnistui: " + e.message);
+    showNotification('❌ Muotoilu epäonnistui: ' + e.message);
   }
 });
 
@@ -152,9 +497,24 @@ copyBtn.addEventListener("click", async () => {
   const text = editor.getValue();
   try {
     await navigator.clipboard.writeText(text);
-    alert("Koodi kopioitu leikepöydälle.");
+    showNotification('📋 Koodi kopioitu leikepöydälle!');
   } catch (e) {
-    alert("Kopiointi epäonnistui: " + e.message);
+    showNotification('❌ Kopiointi epäonnistui: ' + e.message);
+  }
+});
+
+// Pikanäppäimet
+document.addEventListener('keydown', (e) => {
+  // Ctrl/Cmd + S = Tallenna
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    saveBtn.click();
+  }
+  
+  // Ctrl/Cmd + Shift + F = Kaunista
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'F') {
+    e.preventDefault();
+    formatBtn.click();
   }
 });
 </script>
